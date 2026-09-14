@@ -218,6 +218,7 @@ def reset_test_data():
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM orders")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='orders'")
         conn.commit()
     return {"message": "Order test data reset successfully"}
 

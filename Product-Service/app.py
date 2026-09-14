@@ -177,6 +177,7 @@ def reset_test_data():
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM products")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='products'")
         initial_products = [
             ("GIX-HLM-001", "Gixxer 155 Full Face Helmet", "ECE certified aerodynamic helmet", 4500.0, 10),
             ("GIX-JCK-002", "Riding Armored Jacket", "Level 2 impact armor jacket", 3200.0, 5),
