@@ -16,7 +16,8 @@ app = FastAPI(
 )
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "orders.db")
-PRODUCT_SERVICE_BASE_URL = "http://127.0.0.1:5001/api/v1/products"
+_PRODUCT_BASE = os.getenv("PRODUCT_SERVICE_URL", "http://127.0.0.1:5001")
+PRODUCT_SERVICE_BASE_URL = f"{_PRODUCT_BASE}/api/v1/products"
 
 # Pydantic Schemas matching the Jira EARS Acceptance Criteria
 class OrderCreate(BaseModel):

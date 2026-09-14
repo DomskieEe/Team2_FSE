@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Gixxer 155 Full Face Helmet",
+    "price": 4500.0,
+    "stock": 10
+  },
+  {
+    "name": "Riding Armored Jacket",
+    "price": 3200.0,
+    "stock": 5
+  },
+  {
+    "name": "Brembo Brake Pads",
+    "price": 850.0,
+    "stock": 25
+  },
+  {
+    "name": "Motorcycle Chain Lube",
+    "price": 350.0,
+    "stock": 50
+  },
+  {
+    "name": "LED Headlight Kit",
+    "price": 1800.0,
+    "stock": 8
+  }
+]
