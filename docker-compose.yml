@@ -1,0 +1,84 @@
+version: "3.9"
+
+# Team2 FSE - E-Commerce Microservices
+# TDM (Test Data Management) via Docker
+#
+# Usage:
+#   Start all services:  docker-compose up --build
+#   Run tests:           docker-compose run test-runner
+#   Teardown:            docker-compose down -v
+
+services:
+
+  product-service:
+    build:
+      context: ./Product-Service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "5001:5001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/products')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  order-service:
+    build:
+      context: ./Order-Service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "5002:5002"
+    depends_on:
+      product-service:
+        condition: service_healthy
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:5001/products
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/orders')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  tdm-seeder:
+    build:
+      context: ./TDM
+      dockerfile: Dockerfile
+    container_name: tdm-seeder
+    depends_on:
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:5001
+      - ORDER_SERVICE_URL=http://order-service:5002
+    networks:
+      - ecommerce-net
+
+  test-runner:
+    build:
+      context: ./Integration-Tests
+      dockerfile: Dockerfile
+    container_name: test-runner
+    depends_on:
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:5001
+      - ORDER_SERVICE_URL=http://order-service:5002
+    networks:
+      - ecommerce-net
+    profiles:
+      - test
+
+networks:
+  ecommerce-net:
+    driver: bridge
