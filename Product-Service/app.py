@@ -10,6 +10,11 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 class Product(BaseModel):
     id: int
     sku: str
@@ -227,13 +232,8 @@ from typing import List, Optional
 import sqlite3
 import os
 
-app = FastAPI(
-    title="Product Catalog Service",
-    description="Dedicated Product Catalog REST API with SQLite persistence and atomic stock reservations",
-    version="1.0.0",
-    openapi_url="/api/v1/openapi.json",
-    docs_url="/docs"
-)
+# Note: Using the app instance defined at the top of the file
+# app = FastAPI(...) - REMOVED duplicate declaration to avoid route overwriting
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "products.db")
 

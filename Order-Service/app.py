@@ -3,6 +3,11 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 class Order(BaseModel):
     id: int
     vehicle_name: str
@@ -44,13 +49,8 @@ import sqlite3
 import os
 from datetime import datetime
 
-app = FastAPI(
-    title="Order Processing Service",
-    description="Microservice with inter-service HTTP communication to Product Service for staged, transactional order fulfillment",
-    version="1.0.0",
-    openapi_url="/api/v1/openapi.json",
-    docs_url="/docs"
-)
+# Note: Using the app instance defined at the top of the file
+# app = FastAPI(...) - REMOVED duplicate declaration to avoid route overwriting
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "orders.db")
 _PRODUCT_BASE = os.getenv("PRODUCT_SERVICE_URL", "http://127.0.0.1:5001")
