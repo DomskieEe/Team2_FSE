@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoCar Store - Vehicle E-Commerce</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header>
+        <h1><i class="fa-solid fa-car-rear"></i> MotoCar Store</h1>
+        <div class="search-form">
+            <input type="text" id="live-search" placeholder="Search keywords, SKU, title..." class="search-input">
+        </div>
+        <nav style="display: flex; align-items: center; gap: 20px;">
+            <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <div class="cart-badge-container" onclick="toggleCartDrawer()" style="cursor: pointer; position: relative; color: white;">
+                <i class="fa-solid fa-cart-shopping" style="font-size: 20px;"></i>
+                <span id="cart-count" style="position: absolute; top: -8px; right: -10px; background-color: #e94560; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold;">0</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Vehicle Catalogs</h2>
+        
+        <div class="category-filter">
+            {% for cat in categories %}
+            <a href="/?category={{ cat }}" class="cat-btn {% if current_category == cat %}active{% endif %}">
+               {{ cat }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="product-grid" id="products">
+            {% for product in products %}
+            <div class="product-card" 
+                 data-name="{{ product.name | lower }}" 
+                 data-sku="{{ product.sku | lower }}" 
+                 data-desc="{{ product.description | lower }}">
+                <img src="{{ product.image }}" alt="{{ product.name }}">
+                <div class="product-info">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span class="category">{{ product.category }}</span>
+                        <span class="sku-code">SKU: {{ product.sku }}</span>
+                    </div>
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">${{ "%.2f"|format(product.price) }} USD</p>
+                    <p class="desc">{{ product.description }}</p>
+                    
+                    <!-- Real-Time Stock Badge -->
+                    <div style="margin: 10px 0;">
+                        {% if product.stock == 0 %}
+                            <span class="badge badge-out">Out of Stock</span>
+                        {% elif product.stock <= 10 %}
+                            <span class="badge badge-low">Low Stock: {{ product.stock }} left</span>
+                        {% else %}
+                            <span class="badge badge-in">In Stock ({{ product.stock }})</span>
+                        {% endif %}
+                    </div>
+
+                    {% if product.stock == 0 %}
+                        <button class="btn add-to-cart-btn disabled" disabled>
+                            <i class="fa-solid fa-ban"></i> Out of Stock
+                        </button>
+                    {% else %}
+                        <button class="btn add-to-cart-btn" 
+                                data-id="{{ product.id }}" 
+                                data-name="{{ product.name }}" 
+                                data-price="{{ product.price }}"
+                                data-stock="{{ product.stock }}">
+                            <i class="fa-solid fa-cart-plus"></i> + Add
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Slide-Over Shopping Cart Drawer -->
+    <div id="cart-drawer" class="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</h3>
+            <button onclick="toggleCartDrawer()" class="close-drawer-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cart-items-list" class="cart-drawer-body">
+            <p style="color: #666; text-align: center; margin-top: 40px;">Your cart is empty.</p>
+        </div>
+        <div class="cart-drawer-footer">
+            <div class="cart-summary-row">
+                <span>Subtotal:</span>
+                <span id="cart-subtotal">$0.00</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Estimated Tax (10%):</span>
+                <span id="cart-tax">$0.00</span>
+            </div>
+            <div class="cart-summary-row total-row">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            <button class="btn" style="width: 100%; background-color: #28a745; margin-top: 15px;" onclick="openCheckoutModal()">Complete Checkout</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="cart-modal" style="display: none;">
+        <div class="cart-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Customer Checkout</h3>
+                <button onclick="closeCheckoutModal()" style="background: none; border: none; font-size: 18px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="checkout-form" onsubmit="submitOrder(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="checkout-email" placeholder="customer@example.com" class="form-control">
+                    <small id="email-error" class="error-text" style="display: none; color: #e94560;">Valid email is required.</small>
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Shipping Address</label>
+                    <textarea id="checkout-address" placeholder="123 Street, City, Country" class="form-control" rows="3"></textarea>
+                    <small id="address-error" class="error-text" style="display: none; color: #e94560;">Shipping address is required.</small>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 15px; background-color: #28a745;">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        updateCartUI();
+
+        // Real-Time Client-Side Search
+        document.getElementById('live-search').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const sku = card.getAttribute('data-sku');
+                const desc = card.getAttribute('data-desc');
+                if (name.includes(query) || sku.includes(query) || desc.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Add to Cart Handlers
+        document.querySelectorAll('.add-to-cart-btn:not(.disabled)').forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name');
+                const price = parseFloat(button.getAttribute('data-price'));
+                const stock = parseInt(button.getAttribute('data-stock'));
+
+                const existingItem = cart.find(item => item.id === id);
+                if (existingItem) {
+                    if (existingItem.quantity < stock) {
+                        existingItem.quantity += 1;
+                    } else {
+                        showToast("Cannot add more than available stock limit!", "error");
+                        return;
+                    }
+                } else {
+                    cart.push({ id, name, price, quantity: 1, stock });
+                }
+
+                saveAndRefreshCart();
+                showToast(name + " added to cart successfully!");
+            });
+        });
+
+        function saveAndRefreshCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const countElem = document.getElementById('cart-count');
+            const listElem = document.getElementById('cart-items-list');
+            const subtotalElem = document.getElementById('cart-subtotal');
+            const taxElem = document.getElementById('cart-tax');
+            const totalElem = document.getElementById('cart-total');
+
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            countElem.innerText = totalCount;
+
+            if (cart.length === 0) {
+                listElem.innerHTML = '<p style="color: #666; text-align: center; margin-top: 40px;">Your cart is empty.</p>';
+                subtotalElem.innerText = '$0.00';
+                taxElem.innerText = '$0.00';
+                totalElem.innerText = '$0.00';
+                return;
+            }
+
+            let html = '';
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                let itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                html += `
+                    <div class="cart-drawer-item">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <span style="color: #666; font-size: 13px;">$${item.price.toFixed(2)} USD</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button onclick="adjustQty('${item.id}', -1)" class="qty-btn">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="adjustQty('${item.id}', 1)" class="qty-btn">+</button>
+                            <button onclick="removeItem('${item.id}')" style="background: none; border: none; color: #e94560; cursor: pointer; margin-left: 5px;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            let tax = subtotal * 0.10;
+            let grandTotal = subtotal + tax;
+
+            listElem.innerHTML = html;
+            subtotalElem.innerText = '$' + subtotal.toFixed(2);
+            taxElem.innerText = '$' + tax.toFixed(2);
+            totalElem.innerText = '$' + grandTotal.toFixed(2);
+        }
+
+        function adjustQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                let newQty = item.quantity + delta;
+                if (newQty > item.stock) {
+                    showToast("Maximum available stock reached.", "error");
+                    return;
+                }
+                if (newQty <= 0) {
+                    removeItem(id);
+                    return;
+                }
+                item.quantity = newQty;
+                saveAndRefreshCart();
+            }
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(item => item.id !== id);
+            saveAndRefreshCart();
+        }
+
+        function toggleCartDrawer() {
+            const drawer = document.getElementById('cart-drawer');
+            drawer.classList.toggle('open');
+        }
+
+        function openCheckoutModal() {
+            if (cart.length === 0) {
+                showToast("Your cart is empty!", "error");
+                return;
+            }
+            toggleCartDrawer();
+            document.getElementById('checkout-modal').style.display = 'flex';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').style.display = 'none';
+        }
+
+        async function submitOrder(e) {
+            e.preventDefault();
+            const email = document.getElementById('checkout-email').value.trim();
+            const address = document.getElementById('checkout-address').value.trim();
+            
+            let isValid = true;
+            if (!email || !email.includes('@')) {
+                document.getElementById('email-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('email-error').style.display = 'none';
+            }
+
+            if (!address) {
+                document.getElementById('address-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('address-error').style.display = 'none';
+            }
+
+            if (!isValid) return;
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const total = subtotal * 1.10;
+
+            try {
+                const response = await fetch('/api/v1/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, address, items: cart, total })
+                });
+
+                if (response.status === 201) {
+                    showToast("Order successfully placed! (HTTP 201 Created)");
+                    cart = [];
+                    saveAndRefreshCart();
+                    closeCheckoutModal();
+                    document.getElementById('checkout-form').reset();
+                } else {
+                    showToast("Order submission failed.", "error");
+                }
+            } catch (err) {
+                showToast("Network error during checkout.", "error");
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

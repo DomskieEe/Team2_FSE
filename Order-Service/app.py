@@ -1,3 +1,40 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Order(BaseModel):
+    id: int
+    vehicle_name: str
+    quantity: int
+    status: str = "Pending"
+
+orders = [
+    {
+        "id": 1,
+        "vehicle_name": "Toyota Vios",
+        "quantity": 1,
+        "status": "Pending"
+    }
+]
+
+@app.get("/orders")
+def get_orders():
+    return orders
+
+@app.post("/orders")
+def create_order(order: Order):
+    orders.append(order.dict())
+    return order
+
+@app.put("/orders/{order_id}")
+def update_order(order_id: int, status: str):
+    for order in orders:
+        if order["id"] == order_id:
+            order["status"] = status
+            return order
+    raise HTTPException(status_code=404, detail="Order not found")
+
 # Order-Service/app.py
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
@@ -225,3 +262,4 @@ def reset_test_data():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=5002, reload=True)
+
